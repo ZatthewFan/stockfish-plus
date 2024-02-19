@@ -9,7 +9,7 @@ data PieceType = Pawn | Bishop | Knight | Rook | Queen | King deriving (Show, Eq
 data Square = Square Char Int deriving (Show, Eq)
 data Board = Board [(Square, Maybe Piece)] deriving (Show, Eq)
 data Pos = Pos Char Int deriving (Show, Eq)
-data State = State -- Define your State type as needed
+data State = State -- TODO
 
 initialBoard :: Board
 initialBoard = Board [
