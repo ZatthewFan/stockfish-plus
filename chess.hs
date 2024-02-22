@@ -47,13 +47,23 @@ initialBoard = Board [
     (Square 'H' 7, Just (Piece Black Pawn))
   ]
 
-prettyBoard :: Board -> String
+-- prettyBoard :: Board -> String
 
-evalBoard :: Board->Int
+-- Test with: 
+--    evalBoard initialBoard
+evalBoard :: Board -> Int
+evalBoard (Board squares) = sum $ map valueSquare squares
+    where
+        valueSquare :: (Square, Maybe Piece) -> Int
+        valueSquare (_, Nothing) = 0
+        valueSquare (_, Just piece) = valuePiece piece
 
 -- Can also try guards instead of case
 valuePiece :: Piece -> Int
-valuePiece (Piece _ pieceType) =
+-- Test with: 
+--    valuePiece (Piece White Pawn)
+--    valuePiece (Piece Black King)
+valuePiece (Piece White pieceType) =
     case pieceType of
     Pawn -> 1
     Knight -> 3
@@ -61,3 +71,11 @@ valuePiece (Piece _ pieceType) =
     Rook -> 5
     Queen -> 9
     King -> 1000
+valuePiece (Piece Black pieceType) =
+    case pieceType of
+    Pawn -> -1
+    Knight -> -3
+    Bishop -> -3
+    Rook -> -5
+    Queen -> -9
+    King -> -1000
