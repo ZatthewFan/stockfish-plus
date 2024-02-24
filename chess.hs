@@ -132,3 +132,5 @@ getPiece p (Board board) = piece
     where
         (Square _ piece) = head [sq | sq@(Square pos _) <- board, pos == p]
 
+main :: IO ()
+main = putStrLn $ prettyBoard initialBoard
