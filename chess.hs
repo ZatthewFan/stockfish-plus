@@ -1,5 +1,5 @@
-import Data.List (groupBy, sortOn)
-import Data.Maybe (catMaybes)
+import Data.List (groupBy, sortOn, intersperse)
+import Data.Maybe (fromMaybe)
 
 -- Data types
 data Piece = Piece PieceColor PieceType deriving (Show, Eq)
@@ -36,7 +36,7 @@ initialBoard = Board [
     (Square 'E' 7, Just (Piece Black Pawn)),
     (Square 'F' 7, Just (Piece Black Pawn)),
     (Square 'G' 7, Just (Piece Black Pawn)),
-    (Square 'H' 7, Just (Piece Black Pawn))
+    (Square 'H' 7, Just (Piece Black Pawn)),
     (Square 'A' 8, Just (Piece Black Rook)),
     (Square 'B' 8, Just (Piece Black Knight)),
     (Square 'C' 8, Just (Piece Black Bishop)),
@@ -44,12 +44,35 @@ initialBoard = Board [
     (Square 'E' 8, Just (Piece Black King)),
     (Square 'F' 8, Just (Piece Black Bishop)),
     (Square 'G' 8, Just (Piece Black Knight)),
-    (Square 'H' 8, Just (Piece Black Rook)),
-  ]
+    (Square 'H' 8, Just (Piece Black Rook))
+    ]
+
+prettySquare :: Maybe Piece -> Char
+prettySquare Nothing = '*'
+prettySquare (Just (Piece White Pawn)) = '♙'
+prettySquare (Just (Piece Black Pawn)) = '♟'
+prettySquare (Just (Piece White Rook)) = '♖'
+prettySquare (Just (Piece Black Rook)) = '♜'
+prettySquare (Just (Piece White Knight)) = '♘'
+prettySquare (Just (Piece Black Knight)) = '♞'
+prettySquare (Just (Piece White Bishop)) = '♗'
+prettySquare (Just (Piece Black Bishop)) = '♝'
+prettySquare (Just (Piece White Queen)) = '♕'
+prettySquare (Just (Piece Black Queen)) = '♛'
+prettySquare (Just (Piece White King)) = '♔'
+prettySquare (Just (Piece Black King)) = '♚'
 
 prettyBoard :: Board -> String
+prettyBoard (Board squares) =
+    unlines [intersperse ' ' [prettySquare (join $ lookup (Square file rank) squares) | file <- ['A'..'H']] | rank <- [1..8]]
+    where join (Just (Just a)) = Just a
+          join _ = Nothing
 
-evalBoard :: Board -> Int
+main :: IO ()
+main = putStrLn $ prettyBoard initialBoard
+
+
+-- evalBoard :: Board -> Int
 
 -- Can also try guards instead of case
 valuePiece :: Piece -> Int
