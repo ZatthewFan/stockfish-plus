@@ -1,5 +1,6 @@
-import Data.List (intersperse)
-import Data.Maybe (fromMaybe)
+-- TASK 1 --
+import Data.List (groupBy, sortOn)
+import Data.Maybe (catMaybes)
 
 -- Data types
 data Piece = Piece PieceColor PieceType deriving (Show, Eq)
@@ -10,6 +11,7 @@ data Square = Square Pos (Maybe Piece) deriving (Show, Eq)
 data Board = Board [Square] deriving (Show, Eq)
 data Pos = Pos Char Int deriving (Show, Eq)
 data State = State { gameState :: Board } deriving (Show, Eq)
+
 
 initialBoard :: Board
 initialBoard = Board [
@@ -106,6 +108,27 @@ valuePiece (Piece Black pType) =
 
 -- movePos :: Pos -> Pos -> Board -> Board
 
+-- Test with:
+--       deleteSquare (Pos 'G' 7) initialBoard
+deleteSquare :: Pos -> Board -> Board
+deleteSquare pos (Board board) = Board (filter (\(Square squarePos _) -> squarePos /= pos) board)
 
-main :: IO ()
-main = putStrLn $ prettyBoard initialBoard
+updateBoard :: Pos -> Pos -> Board -> Board
+updateBoard fromPos toPos (Board board) = Board updatedSquares
+    where
+        -- TODO: try rewriting without @ to make more readable?
+        -- TODO: also move this definition outside
+        updateSquare :: Square -> Square
+        updateSquare sq@(Square pos _)
+            | pos == toPos =    Square toPos (getPiece fromPos (Board board))
+            | otherwise =       sq
+
+        
+
+        updatedSquares = map updateSquare board
+
+getPiece :: Pos -> Board -> Maybe Piece
+getPiece p (Board board) = piece
+    where
+        (Square _ piece) = head [sq | sq@(Square pos _) <- board, pos == p]
+
