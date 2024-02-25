@@ -107,7 +107,8 @@ valuePiece (Piece Black pType) =
 
 -- TASK 2 --
 
--- movePos :: Pos -> Pos -> Board -> Board
+movePos :: Pos -> Pos -> Board -> Board
+movePos fromPos toPos board = deleteSquare toPos (updateBoard fromPos toPos board)
 
 -- Test with:
 --      prettyBoard (deleteSquare (Pos 'G' 7) initialBoard)
