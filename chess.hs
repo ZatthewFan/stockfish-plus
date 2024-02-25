@@ -134,5 +134,17 @@ getPiece p (Board board) = piece
     where
         (Square _ piece) = head [sq | sq@(Square pos _) <- board, pos == p]
 
+-- Test with:
+--      moves Bishop
+--      moves Rook
+moves :: PieceType -> [(Int, Int)]
+moves Pawn =    [] -- Pawn vectors depend on piece colour
+moves Knight = [(-2, -1), (-2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2), (2, -1), (2, 1)]
+moves Bishop = [(1, 1), (1, -1), (-1, 1), (-1, -1)] -- Diagonals
+moves Rook = [(0, 1), (1, 0), (-1, 0), (0, -1)] -- Horizontals + verticals
+moves King = [(1, 1), (1, 0), (0, 1), (-1, -1), (-1, 0), (-1, 1), (0, -1), (1, -1)]
+
+
+
 main :: IO ()
 main = prettyBoard initialBoard
