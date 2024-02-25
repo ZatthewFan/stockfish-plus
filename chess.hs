@@ -1,6 +1,7 @@
 -- TASK 1 --
 import Data.List (groupBy, sortOn)
 import Data.Maybe (catMaybes)
+import Data.List (intersperse)
 
 -- Data types
 data Piece = Piece PieceColor PieceType deriving (Show, Eq)
@@ -64,9 +65,9 @@ prettySquare (Just (Piece Black Queen)) = '♛'
 prettySquare (Just (Piece White King)) = '♔'
 prettySquare (Just (Piece Black King)) = '♚'
 
-prettyBoard :: Board -> String
+prettyBoard :: Board -> IO()
 prettyBoard (Board squares) =
-    unlines [intersperse ' ' [prettySquare (flatten (lookup (Pos file rank) pieceList)) | file <- ['A'..'H']] | rank <- [1..8]]
+    putStrLn $ unlines [intersperse ' ' [prettySquare (flatten (lookup (Pos file rank) pieceList)) | file <- ['A'..'H']] | rank <- [1..8]]
     where
         pieceList = [(p, s) | (Square p s) <- squares]
         flatten Nothing = Nothing
@@ -74,7 +75,7 @@ prettyBoard (Board squares) =
         flatten (Just (Just a)) = Just a
 
 -- Test with: 
---    evalBoard initialBoard
+--      evalBoard initialBoard
 evalBoard :: Board -> Int
 evalBoard (Board squares) = sum $ map valueSquare squares
     where
@@ -84,8 +85,8 @@ evalBoard (Board squares) = sum $ map valueSquare squares
 
 -- Can also try guards instead of case
 -- Test with: 
-    --    valuePiece (Piece White Pawn)
---    valuePiece (Piece Black King)
+--      valuePiece (Piece White Pawn)
+--      valuePiece (Piece Black King)
 valuePiece :: Piece -> Int
 valuePiece (Piece White pieceType) =
     case pieceType of
@@ -109,28 +110,29 @@ valuePiece (Piece Black pType) =
 -- movePos :: Pos -> Pos -> Board -> Board
 
 -- Test with:
---       deleteSquare (Pos 'G' 7) initialBoard
+--      prettyBoard (deleteSquare (Pos 'G' 7) initialBoard)
 deleteSquare :: Pos -> Board -> Board
 deleteSquare pos (Board board) = Board (filter (\(Square squarePos _) -> squarePos /= pos) board)
 
+-- Test with:
+--      prettyBoard (updateBoard (Pos 'A' 1) (Pos 'A' 8 ) initialBoard)
 updateBoard :: Pos -> Pos -> Board -> Board
-updateBoard fromPos toPos (Board board) = Board updatedSquares
-    where
-        -- TODO: try rewriting without @ to make more readable?
-        -- TODO: also move this definition outside
-        updateSquare :: Square -> Square
-        updateSquare sq@(Square pos _)
-            | pos == toPos =    Square toPos (getPiece fromPos (Board board))
-            | otherwise =       sq
+updateBoard fromPos toPos (Board board) = Board (map (updateSquare toPos fromPos (Board board)) board)
 
-        
+-- Test with:
+--      updateSquare (Pos 'A' 1) (Pos 'A' 8) initialBoard (Square (Pos 'A' 8) (Just (Piece White Rook)))
+--      updateSquare (Pos 'A' 1) (Pos 'A' 8) initialBoard (Square (Pos 'A' 1) (Just (Piece White Rook)))
+updateSquare :: Pos -> Pos -> Board -> Square -> Square
+updateSquare fromPos toPos board (Square pos piece)
+    | pos == toPos =    Square toPos (getPiece fromPos board)
+    | otherwise =       Square pos piece
 
-        updatedSquares = map updateSquare board
-
+-- Test with:
+--      getPiece (Pos 'A' 1) initialBoard
 getPiece :: Pos -> Board -> Maybe Piece
 getPiece p (Board board) = piece
     where
         (Square _ piece) = head [sq | sq@(Square pos _) <- board, pos == p]
 
 main :: IO ()
-main = putStrLn $ prettyBoard initialBoard
+main = prettyBoard initialBoard
