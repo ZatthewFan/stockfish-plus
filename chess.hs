@@ -1,5 +1,4 @@
 -- TASK 1 --
-import Data.List (groupBy, sortOn)
 import Data.Maybe (catMaybes)
 import Data.List (intersperse)
 
