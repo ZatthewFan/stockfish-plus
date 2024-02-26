@@ -130,6 +130,9 @@ updateBoard fromPos toPos (Board board) = Board (map updateSquare board)
             | pos == toPos =    Square toPos (getPiece fromPos (Board board))
             | otherwise =       Square pos piece
 
+-- Test with:
+--      getPiece (Pos 'A' 1) initialBoard
+--      getPiece (Pos 'E' 5) initialBoard
 getPiece :: Pos -> Board -> Maybe Piece
 getPiece pos (Board squares) = 
     foldr (\(Square sqPos maybePiece) acc -> if sqPos == pos then maybePiece else acc) Nothing squares
@@ -161,21 +164,21 @@ pieceType (Piece _ pt) = pt
 --      prettyBoards (generatePawnMoves (Piece White Pawn) (Pos 'A' 2) initialBoard)
 generatePawnMoves :: Piece -> Pos -> Board -> [Board]
 generatePawnMoves (Piece color _) (Pos file rank) board =
-  let stepDirection =   if color == White then 1 else -1
-      startPos =        if color == White && rank == 2 || color == Black && rank == 7 then [1, 2] else [1]
-      forwardMoves =    [movePos (Pos file rank) (Pos file (rank + n * stepDirection)) board | n <- startPos, isPosEmpty (Pos file (rank + n * stepDirection)) board]
-      captureMoves =    [movePos (Pos file rank) (Pos (toEnum $ fromEnum file + d) (rank + stepDirection)) board |
+    let stepDirection =   if color == White then 1 else -1
+        startPos =        if color == White && rank == 2 || color == Black && rank == 7 then [1, 2] else [1]
+        forwardMoves =    [movePos (Pos file rank) (Pos file (rank + n * stepDirection)) board | n <- startPos, isPosEmpty (Pos file (rank + n * stepDirection)) board]
+        captureMoves =    [movePos (Pos file rank) (Pos (toEnum $ fromEnum file + d) (rank + stepDirection)) board |
                       d <- [-1, 1], isValidCapture (Pos (toEnum $ fromEnum file + d) (rank + stepDirection)) board color]
-  in forwardMoves ++ captureMoves
+    in forwardMoves ++ captureMoves
 
 -- Test with:
 --      prettyBoards (generatePawnMoves (Piece White Knight) (Pos 'B' 1) initialBoard)
 generatePieceMoves :: Piece -> Pos -> Board -> (Int, Int) -> [Board]
 generatePieceMoves piece@(Piece color _) (Pos f r) board (df, dr) =
-  let newPos = Pos (toEnum $ fromEnum f + df) (r + dr)
-  in if withinBoard newPos && (isPosEmpty newPos board || isValidCapture newPos board color)
-     then [movePos (Pos f r) newPos board]
-     else []
+    let newPos = Pos (toEnum $ fromEnum f + df) (r + dr)
+    in if withinBoard newPos && (isPosEmpty newPos board || isValidCapture newPos board color)
+        then [movePos (Pos f r) newPos board]
+        else []
 
 -- Test with:
 --      withinBoard (Pos 'A' 1)
