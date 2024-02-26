@@ -128,7 +128,7 @@ updateBoard :: Pos -> Pos -> Board -> Board
 updateBoard fromPos toPos (Board board) = Board (map updateFunc board)
     where
         updateFunc square@(Square pos _)
-        --TODO WRITE THIS WITHOUT @ ALSO THIS FUNCTION IS STILL REVERSING SOMETHING
+        --TODO WRITE THIS WITHOUT @
             | pos == toPos = Square toPos (getPiece fromPos (Board board))
             | otherwise = square
 
