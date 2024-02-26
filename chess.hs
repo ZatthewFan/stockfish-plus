@@ -68,14 +68,10 @@ prettySquare (Just (Piece Black King)) = '♔'
 --      prettyBoard initialBoard
 prettyBoard :: Board -> IO()
 prettyBoard (Board squares) =
-    putStrLn $ unlines [intersperse ' ' [prettySquare (flatten (lookup (Pos file rank) pieceList)) | file <- ['A'..'H']] | rank <- [8,7..1]]
+    unlines [intersperse ' ' [prettySquare (flatten (lookup (Pos file rank) pieceList)) | file <- ['A'..'H']] | rank <- [8,7..1]]
     where
         pieceList = [(p, s) | (Square p s) <- squares]
 
-        -- Test with:
-        --      flatten Nothing
-        --      flatten (Just Nothing)
-        --      flatten (Just (Just (Piece Black King)))
         flatten :: Maybe (Maybe a) -> Maybe a
         flatten Nothing = Nothing
         flatten (Just Nothing) = Nothing
@@ -216,12 +212,6 @@ isValidCapture newPos board color = case getPiece newPos board of
                                       Just (Piece c _) -> c /= color
                                       _ -> False
 
--- Test with: TODO THESE ARE WRONG NOW
---      prettyBoards initialBoard (Pos 'A' 2)   
---      prettyBoards initialBoard (Pos 'A' 1)   Should give nothing, since rook can not move first
-prettyBoards :: [Board] -> IO ()
-prettyBoards = mapM_ prettyBoard
-
 -- Test with:
 --      colorPos White initialBoard
 colorPos :: PieceColor -> Board -> [Pos]
@@ -231,5 +221,9 @@ colorPos pieceColor (Board squares) = map snd $ filter (\(color, pos) -> color =
         getColorFromMaybePiece Nothing = error "No piece provided"
         getColorFromMaybePiece (Just (Piece pc pt)) = pc
 
-main :: IO ()
-main = prettyBoard initialBoard
+-- Test with:
+--      nextStates (State initialBoard)
+nextStates :: State -> [State]
+nextStates (State gamestate) = map State (concatMap (genMoves gamestate) allPos)
+    where
+        allPos = colorPos White gamestate ++ colorPos Black gamestate
