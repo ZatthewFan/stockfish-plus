@@ -65,8 +65,8 @@ prettySquare (Just (Piece White King)) = '♚'
 prettySquare (Just (Piece Black King)) = '♔'
 
 -- Test with:
---      prettyBoard initialBoard
-prettyBoard :: Board -> IO()
+--      putStrLn $ prettyBoard initialBoard
+prettyBoard :: Board -> String
 prettyBoard (Board squares) =
     unlines [intersperse ' ' [prettySquare (flatten (lookup (Pos file rank) pieceList)) | file <- ['A'..'H']] | rank <- [8,7..1]]
     where
@@ -112,6 +112,7 @@ valuePiece (Piece Black pType) =
 
 -- Test with:
 --      putStrLn $ prettyBoard (movePos (Pos 'A' 1) (Pos 'A' 8) initialBoard)
+--      putStrLn $ prettyBoard (movePos (Pos 'A' 1) (Pos 'B' 4) initialBoard)
 movePos :: Pos -> Pos -> Board -> Board
 movePos fromPos toPos board = deleteSquare fromPos (updateBoard fromPos toPos board)
 
@@ -122,6 +123,7 @@ deleteSquare pos (Board board) = Board (filter (\(Square squarePos _) -> squareP
 
 -- Test with:
 --      putStrLn $ prettyBoard (updateBoard (Pos 'A' 1) (Pos 'E' 8) initialBoard)
+--      putStrLn $ prettyBoard (updateBoard (Pos 'A' 1) (Pos 'E' 5) initialBoard)
 updateBoard :: Pos -> Pos -> Board -> Board
 -- updateBoard fromPos toPos (Board board) = Board (map (updateSquare toPos fromPos (Board board)) board)
 updateBoard fromPos toPos (Board board) = Board (map updateFunc board)
