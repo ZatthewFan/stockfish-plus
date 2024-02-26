@@ -65,8 +65,8 @@ prettySquare (Just (Piece White King)) = '♚'
 prettySquare (Just (Piece Black King)) = '♔'
 
 -- Test with:
---      prettyBoard initialBoard
-prettyBoard :: Board -> IO()
+--      putStrLn $ prettyBoard initialBoard
+prettyBoard :: Board -> String
 prettyBoard (Board squares) =
     unlines [intersperse ' ' [prettySquare (flatten (lookup (Pos file rank) pieceList)) | file <- ['A'..'H']] | rank <- [8,7..1]]
     where
