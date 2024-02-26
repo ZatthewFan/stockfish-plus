@@ -127,14 +127,12 @@ updateBoard :: Pos -> Pos -> Board -> Board
 updateBoard fromPos toPos (Board board) = Board (map updateSquare board)
     where
         updateSquare (Square pos piece)
-            | pos == fromPos =  Square pos Nothing
             | pos == toPos =    Square toPos (getPiece fromPos (Board board))
             | otherwise =       Square pos piece
 
 getPiece :: Pos -> Board -> Maybe Piece
-getPiece p (Board squares) = 
-    listToMaybe [pce | Square sqPos (Just pce) <- squares, sqPos == p]
-
+getPiece pos (Board squares) = 
+    foldr (\(Square sqPos maybePiece) acc -> if sqPos == pos then maybePiece else acc) Nothing squares
 
 -- Test with:
 --      moves Bishop
