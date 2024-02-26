@@ -80,7 +80,7 @@ prettyBoard (Board squares) =
 -- Test with: 
 --      evalBoard initialBoard
 evalBoard :: Board -> Int
-evalBoard (Board squares) = sum $ map valueSquare squares
+evalBoard (Board board) = sum $ map valueSquare board
     where
         valueSquare :: Square -> Int
         valueSquare (Square _ Nothing) = 0
@@ -134,8 +134,8 @@ updateBoard fromPos toPos (Board board) = Board (map updateSquare board)
 --      getPiece (Pos 'A' 1) initialBoard
 --      getPiece (Pos 'E' 5) initialBoard
 getPiece :: Pos -> Board -> Maybe Piece
-getPiece pos (Board squares) = 
-    foldr (\(Square sqPos maybePiece) acc -> if sqPos == pos then maybePiece else acc) Nothing squares
+getPiece pos (Board board) = 
+    foldr (\(Square sqPos maybePiece) acc -> if sqPos == pos then maybePiece else acc) Nothing board
 
 -- Test with:
 --      moves Bishop
@@ -147,18 +147,16 @@ moves Bishop = [(1, 1), (1, -1), (-1, 1), (-1, -1)] -- Diagonals
 moves Rook = [(0, 1), (1, 0), (-1, 0), (0, -1)] -- Horizontals + verticals
 moves King = [(1, 1), (1, 0), (0, 1), (-1, -1), (-1, 0), (-1, 1), (0, -1), (1, -1)]
 
---TODO: try to remove the @ sign
 genMoves :: Board -> Pos -> [Board]
-genMoves board@(Board squares) pos = case getPiece pos board of
+genMoves board pos = case getPiece pos board of
     Nothing -> []
     Just piece -> case pieceType piece of
         Pawn -> generatePawnMoves piece pos board
         _    -> concatMap (generatePieceMoves piece pos board) (moves (pieceType piece))
 
-
 -- genMoves helper functions
 pieceType :: Piece -> PieceType
-pieceType (Piece _ pt) = pt
+pieceType (Piece _ piece) = piece
 
 -- Test with:
 --      prettyBoards (generatePawnMoves (Piece White Pawn) (Pos 'A' 2) initialBoard)
@@ -173,12 +171,16 @@ generatePawnMoves (Piece color _) (Pos file rank) board =
 
 -- Test with:
 --      prettyBoards (generatePawnMoves (Piece White Knight) (Pos 'B' 1) initialBoard)
+--      prettyBoards (generatePawnMoves (Piece White Pawn) (Pos 'A' 2) initialBoard)
 generatePieceMoves :: Piece -> Pos -> Board -> (Int, Int) -> [Board]
-generatePieceMoves piece@(Piece color _) (Pos f r) board (df, dr) =
-    let newPos = Pos (toEnum $ fromEnum f + df) (r + dr)
+generatePieceMoves piece pos board (file, rank) =
+    let Pos deltaf deltar = pos
+        newPos = Pos (toEnum $ fromEnum deltaf + file) (deltar + rank)
+        Piece color _ = piece
     in if withinBoard newPos && (isPosEmpty newPos board || isValidCapture newPos board color)
-        then [movePos (Pos f r) newPos board]
+        then [movePos pos newPos board]
         else []
+
 
 -- Test with:
 --      withinBoard (Pos 'A' 1)
