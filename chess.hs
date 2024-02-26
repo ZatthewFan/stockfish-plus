@@ -159,3 +159,10 @@ colorPos pieceColor (Board squares) = map snd $ filter (\(color, pos) -> color =
         getColorFromMaybePiece :: Maybe Piece -> PieceColor
         getColorFromMaybePiece Nothing = error "No piece provided"
         getColorFromMaybePiece (Just (Piece pc pt)) = pc
+
+-- Test with:
+--      nextStates (State initialBoard)
+nextStates :: State -> [State]
+nextStates (State gamestate) = concatMap (genMoves gamestate) allPos
+    where
+        allPos = colorPos White gamestate ++ colorPos Black gamestate
