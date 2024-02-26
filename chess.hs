@@ -66,9 +66,9 @@ prettySquare (Just (Piece Black King)) = '♔'
 
 -- Test with:
 --      putStrLn $ prettyBoard initialBoard
-prettyBoard :: Board -> String
+prettyBoard :: Board -> IO()
 prettyBoard (Board squares) =
-    unlines [intersperse ' ' [prettySquare (flatten (lookup (Pos file rank) pieceList)) | file <- ['A'..'H']] | rank <- [8,7..1]]
+    putStrLn $ unlines [intersperse ' ' [prettySquare (flatten (lookup (Pos file rank) pieceList)) | file <- ['A'..'H']] | rank <- [8,7..1]]
     where
         pieceList = [(p, s) | (Square p s) <- squares]
 
@@ -86,7 +86,6 @@ evalBoard (Board squares) = sum $ map valueSquare squares
         valueSquare (Square _ Nothing) = 0
         valueSquare (Square _ (Just piece)) = valuePiece piece
 
--- Can also try guards instead of case
 -- Test with: 
 --      valuePiece (Piece White Pawn)
 --      valuePiece (Piece Black King)
@@ -117,7 +116,7 @@ movePos :: Pos -> Pos -> Board -> Board
 movePos fromPos toPos board = deleteSquare fromPos (updateBoard fromPos toPos board)
 
 -- Test with:
---      putStrLn $ prettyBoard (deleteSquare (Pos 'G' 7) initialBoard)
+--      prettyBoard (deleteSquare (Pos 'G' 7) initialBoard)
 deleteSquare :: Pos -> Board -> Board
 deleteSquare pos (Board board) = Board (filter (\(Square squarePos _) -> squarePos /= pos) board)
 
@@ -125,29 +124,12 @@ deleteSquare pos (Board board) = Board (filter (\(Square squarePos _) -> squareP
 --      putStrLn $ prettyBoard (updateBoard (Pos 'A' 1) (Pos 'E' 8) initialBoard)
 --      putStrLn $ prettyBoard (updateBoard (Pos 'A' 1) (Pos 'E' 5) initialBoard)
 updateBoard :: Pos -> Pos -> Board -> Board
--- updateBoard fromPos toPos (Board board) = Board (map (updateSquare toPos fromPos (Board board)) board)
-updateBoard fromPos toPos (Board board) = Board (map updateFunc board)
+updateBoard fromPos toPos (Board board) = Board (map updateSquare board)
     where
-        updateFunc square@(Square pos _)
-        --TODO WRITE THIS WITHOUT @
-            | pos == toPos = Square toPos (getPiece fromPos (Board board))
-            | otherwise = square
-
--- Test with:
---      updateSquare (Pos 'A' 1) (Pos 'A' 8) initialBoard (Square (Pos 'A' 8) (Just (Piece White Rook)))
---      updateSquare (Pos 'A' 1) (Pos 'A' 8) initialBoard (Square (Pos 'A' 1) (Just (Piece White Rook)))
--- updateSquare :: Pos -> Pos -> Board -> Square -> Square
--- updateSquare fromPos toPos board (Square pos piece)
---     | pos == toPos =    Square toPos (getPiece fromPos board)
---     | pos == fromPos =  Square pos Nothing  -- Should be cleared later by movePos' call to deleteSquare, keep this for sanity's sake
---     | otherwise =       Square pos piece
-
--- Test with:
---      getPiece (Pos 'A' 1) initialBoard
--- getPiece :: Pos -> Board -> Maybe Piece
--- getPiece p (Board board) = piece
---     where
---         (Square _ piece) = head [sq | sq@(Square pos _) <- board, pos == p]
+        updateSquare (Square pos piece)
+            | pos == fromPos =  Square pos Nothing
+            | pos == toPos =    Square toPos (getPiece fromPos (Board board))
+            | otherwise =       Square pos piece
 
 getPiece :: Pos -> Board -> Maybe Piece
 getPiece p (Board squares) = 
@@ -178,17 +160,18 @@ pieceType :: Piece -> PieceType
 pieceType (Piece _ pt) = pt
 
 -- Test with:
---      putStrLn $ prettyBoard (generatePawnMoves (Piece White Pawn) (Pos 'A' 2) initialBoard)
+--      prettyBoards (generatePawnMoves (Piece White Pawn) (Pos 'A' 2) initialBoard)
 generatePawnMoves :: Piece -> Pos -> Board -> [Board]
 generatePawnMoves (Piece color _) (Pos file rank) board =
-  let moveForward = if color == White then 1 else -1
-      startPos = if color == White && rank == 2 || color == Black && rank == 7 then [1, 2] else [1]
-      forwardMoves = [movePos (Pos file rank) (Pos file (rank + n * moveForward)) board | n <- startPos, isPosEmpty (Pos file (rank + n * moveForward)) board]
-    --   captureMoves = [movePos (Pos file rank) (Pos (toEnum $ fromEnum file + d) (rank + moveForward)) board |
-    --                   d <- [-1, 1], isValidCapture (Pos (toEnum $ fromEnum file + d) (rank + moveForward)) board color]
---   in forwardMoves ++ captureMoves
-  in forwardMoves
+  let stepDirection =   if color == White then 1 else -1
+      startPos =        if color == White && rank == 2 || color == Black && rank == 7 then [1, 2] else [1]
+      forwardMoves =    [movePos (Pos file rank) (Pos file (rank + n * stepDirection)) board | n <- startPos, isPosEmpty (Pos file (rank + n * stepDirection)) board]
+      captureMoves =    [movePos (Pos file rank) (Pos (toEnum $ fromEnum file + d) (rank + stepDirection)) board |
+                      d <- [-1, 1], isValidCapture (Pos (toEnum $ fromEnum file + d) (rank + stepDirection)) board color]
+  in forwardMoves ++ captureMoves
 
+-- Test with:
+--      prettyBoards (generatePawnMoves (Piece White Knight) (Pos 'B' 1) initialBoard)
 generatePieceMoves :: Piece -> Pos -> Board -> (Int, Int) -> [Board]
 generatePieceMoves piece@(Piece color _) (Pos f r) board (df, dr) =
   let newPos = Pos (toEnum $ fromEnum f + df) (r + dr)
@@ -216,6 +199,10 @@ isValidCapture :: Pos -> Board -> PieceColor -> Bool
 isValidCapture newPos board color = case getPiece newPos board of
                                       Just (Piece c _) -> c /= color
                                       _ -> False
+
+-- Prints several boards out from a list, useful for functions like genMoves
+prettyBoards :: [Board] -> IO ()
+prettyBoards = mapM_ prettyBoard
 
 -- Test with:
 --      colorPos White initialBoard
