@@ -1,5 +1,5 @@
 -- TASK 1 --
-import Data.Maybe (catMaybes)
+import Data.Maybe (catMaybes, listToMaybe, isNothing)
 import Data.List (intersperse)
 
 -- Data types
@@ -65,10 +65,10 @@ prettySquare (Just (Piece White King)) = '♚'
 prettySquare (Just (Piece Black King)) = '♔'
 
 -- Test with:
---      putStrLn $ prettyBoard initialBoard
-prettyBoard :: Board -> String
+--      prettyBoard initialBoard
+prettyBoard :: Board -> IO()
 prettyBoard (Board squares) =
-    unlines [intersperse ' ' [prettySquare (flatten (lookup (Pos file rank) pieceList)) | file <- ['A'..'H']] | rank <- [1..8]]
+    putStrLn $ unlines [intersperse ' ' [prettySquare (flatten (lookup (Pos file rank) pieceList)) | file <- ['A'..'H']] | rank <- [8,7..1]]
     where
         pieceList = [(p, s) | (Square p s) <- squares]
 
@@ -122,24 +122,36 @@ deleteSquare :: Pos -> Board -> Board
 deleteSquare pos (Board board) = Board (filter (\(Square squarePos _) -> squarePos /= pos) board)
 
 -- Test with:
---      prettyBoard (updateBoard (Pos 'A' 1) (Pos 'A' 8 ) initialBoard)
+--      prettyBoard (updateBoard (Pos 'A' 1) (Pos 'A' 8) initialBoard)
 updateBoard :: Pos -> Pos -> Board -> Board
-updateBoard fromPos toPos (Board board) = Board (map (updateSquare toPos fromPos (Board board)) board)
+-- updateBoard fromPos toPos (Board board) = Board (map (updateSquare toPos fromPos (Board board)) board)
+updateBoard fromPos toPos (Board board) = Board (map updateFunc board)
+    where
+        updateFunc square@(Square pos _)
+        --TODO WRITE THIS WITHOUT @ ALSO THIS FUNCTION IS STILL REVERSING SOMETHING
+            | pos == toPos = Square toPos (getPiece fromPos (Board board))
+            | otherwise = square
 
 -- Test with:
 --      updateSquare (Pos 'A' 1) (Pos 'A' 8) initialBoard (Square (Pos 'A' 8) (Just (Piece White Rook)))
 --      updateSquare (Pos 'A' 1) (Pos 'A' 8) initialBoard (Square (Pos 'A' 1) (Just (Piece White Rook)))
-updateSquare :: Pos -> Pos -> Board -> Square -> Square
-updateSquare fromPos toPos board (Square pos piece)
-    | pos == toPos =    Square toPos (getPiece fromPos board)
-    | otherwise =       Square pos piece
+-- updateSquare :: Pos -> Pos -> Board -> Square -> Square
+-- updateSquare fromPos toPos board (Square pos piece)
+--     | pos == toPos =    Square toPos (getPiece fromPos board)
+--     | pos == fromPos =  Square pos Nothing  -- Should be cleared later by movePos' call to deleteSquare, keep this for sanity's sake
+--     | otherwise =       Square pos piece
 
 -- Test with:
 --      getPiece (Pos 'A' 1) initialBoard
+-- getPiece :: Pos -> Board -> Maybe Piece
+-- getPiece p (Board board) = piece
+--     where
+--         (Square _ piece) = head [sq | sq@(Square pos _) <- board, pos == p]
+
 getPiece :: Pos -> Board -> Maybe Piece
-getPiece p (Board board) = piece
-    where
-        (Square _ piece) = head [sq | sq@(Square pos _) <- board, pos == p]
+getPiece p (Board squares) = 
+    listToMaybe [pce | Square sqPos (Just pce) <- squares, sqPos == p]
+
 
 -- Test with:
 --      moves Bishop
@@ -151,6 +163,65 @@ moves Bishop = [(1, 1), (1, -1), (-1, 1), (-1, -1)] -- Diagonals
 moves Rook = [(0, 1), (1, 0), (-1, 0), (0, -1)] -- Horizontals + verticals
 moves King = [(1, 1), (1, 0), (0, 1), (-1, -1), (-1, 0), (-1, 1), (0, -1), (1, -1)]
 
+--TODO: try to remove the @ sign
+genMoves :: Board -> Pos -> [Board]
+genMoves board@(Board squares) pos = case getPiece pos board of
+    Nothing -> []
+    Just piece -> case pieceType piece of
+        Pawn -> generatePawnMoves piece pos board
+        _    -> concatMap (generatePieceMoves piece pos board) (moves (pieceType piece))
+
+
+-- genMoves helper functions
+pieceType :: Piece -> PieceType
+pieceType (Piece _ pt) = pt
+
+-- Test with:
+--      prettyBoards (generatePawnMoves (Piece White Pawn) (Pos 'A' 2) initialBoard)
+generatePawnMoves :: Piece -> Pos -> Board -> [Board]
+generatePawnMoves (Piece color _) (Pos file rank) board =
+  let moveForward = if color == White then 1 else -1
+      startPos = if color == White && rank == 2 || color == Black && rank == 7 then [1, 2] else [1]
+      forwardMoves = [movePos (Pos file rank) (Pos file (rank + n * moveForward)) board | n <- startPos, isPosEmpty (Pos file (rank + n * moveForward)) board]
+    --   captureMoves = [movePos (Pos file rank) (Pos (toEnum $ fromEnum file + d) (rank + moveForward)) board |
+    --                   d <- [-1, 1], isValidCapture (Pos (toEnum $ fromEnum file + d) (rank + moveForward)) board color]
+--   in forwardMoves ++ captureMoves
+  in forwardMoves
+
+generatePieceMoves :: Piece -> Pos -> Board -> (Int, Int) -> [Board]
+generatePieceMoves piece@(Piece color _) (Pos f r) board (df, dr) =
+  let newPos = Pos (toEnum $ fromEnum f + df) (r + dr)
+  in if withinBoard newPos && (isPosEmpty newPos board || isValidCapture newPos board color)
+     then [movePos (Pos f r) newPos board]
+     else []
+
+-- Test with:
+--      withinBoard (Pos 'A' 1)
+--      withinBoard (Pos 'Z' 8)
+--      withinBoard (Pos 'A' 20)
+withinBoard :: Pos -> Bool
+withinBoard (Pos file rank) = file >= 'A' && file <= 'H' && rank >= 1 && rank <= 8
+
+-- Test with:
+--      isPosEmpty (Pos 'E' 4) initialBoard
+--      isPosEmpty (Pos 'F' 8) initialBoard
+isPosEmpty :: Pos -> Board -> Bool
+isPosEmpty p board = isNothing (getPiece p board)
+
+-- Test with:
+--      isValidCapture (Pos 'E' 7) initialBoard White
+--      Returns true if input colour is opposite of the occupant's colour
+isValidCapture :: Pos -> Board -> PieceColor -> Bool
+isValidCapture newPos board color = case getPiece newPos board of
+                                      Just (Piece c _) -> c /= color
+                                      _ -> False
+
+-- Test with: TODO THESE ARE WRONG NOW
+--      prettyBoards initialBoard (Pos 'A' 2)   
+--      prettyBoards initialBoard (Pos 'A' 1)   Should give nothing, since rook can not move first
+prettyBoards :: [Board] -> IO ()
+prettyBoards = mapM_ prettyBoard
+
 -- Test with:
 --      colorPos White initialBoard
 colorPos :: PieceColor -> Board -> [Pos]
@@ -159,3 +230,6 @@ colorPos pieceColor (Board squares) = map snd $ filter (\(color, pos) -> color =
         getColorFromMaybePiece :: Maybe Piece -> PieceColor
         getColorFromMaybePiece Nothing = error "No piece provided"
         getColorFromMaybePiece (Just (Piece pc pt)) = pc
+
+main :: IO ()
+main = prettyBoard initialBoard
