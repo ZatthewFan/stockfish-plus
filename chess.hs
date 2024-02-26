@@ -51,24 +51,32 @@ initialBoard = Board [
 
 prettySquare :: Maybe Piece -> Char
 prettySquare Nothing = '*'
-prettySquare (Just (Piece White Pawn)) = '♙'
-prettySquare (Just (Piece Black Pawn)) = '♟'
-prettySquare (Just (Piece White Rook)) = '♖'
-prettySquare (Just (Piece Black Rook)) = '♜'
-prettySquare (Just (Piece White Knight)) = '♘'
-prettySquare (Just (Piece Black Knight)) = '♞'
-prettySquare (Just (Piece White Bishop)) = '♗'
-prettySquare (Just (Piece Black Bishop)) = '♝'
-prettySquare (Just (Piece White Queen)) = '♕'
-prettySquare (Just (Piece Black Queen)) = '♛'
-prettySquare (Just (Piece White King)) = '♔'
-prettySquare (Just (Piece Black King)) = '♚'
+prettySquare (Just (Piece White Pawn)) = '♟'
+prettySquare (Just (Piece Black Pawn)) = '♙'
+prettySquare (Just (Piece White Rook)) = '♜'
+prettySquare (Just (Piece Black Rook)) = '♖'
+prettySquare (Just (Piece White Knight)) = '♞'
+prettySquare (Just (Piece Black Knight)) = '♘'
+prettySquare (Just (Piece White Bishop)) = '♝'
+prettySquare (Just (Piece Black Bishop)) = '♗'
+prettySquare (Just (Piece White Queen)) = '♛'
+prettySquare (Just (Piece Black Queen)) = '♕'
+prettySquare (Just (Piece White King)) = '♚'
+prettySquare (Just (Piece Black King)) = '♔'
 
-prettyBoard :: Board -> IO()
+-- Test with:
+--      putStrLn $ prettyBoard initialBoard
+prettyBoard :: Board -> String
 prettyBoard (Board squares) =
-    putStrLn $ unlines [intersperse ' ' [prettySquare (flatten (lookup (Pos file rank) pieceList)) | file <- ['A'..'H']] | rank <- [1..8]]
+    unlines [intersperse ' ' [prettySquare (flatten (lookup (Pos file rank) pieceList)) | file <- ['A'..'H']] | rank <- [1..8]]
     where
         pieceList = [(p, s) | (Square p s) <- squares]
+
+        -- Test with:
+        --      flatten Nothing
+        --      flatten (Just Nothing)
+        --      flatten (Just (Just (Piece Black King)))
+        flatten :: Maybe (Maybe a) -> Maybe a
         flatten Nothing = Nothing
         flatten (Just Nothing) = Nothing
         flatten (Just (Just a)) = Just a
@@ -108,7 +116,6 @@ valuePiece (Piece Black pType) =
 
 movePos :: Pos -> Pos -> Board -> Board
 movePos fromPos toPos board = deleteSquare toPos (updateBoard fromPos toPos board)
-
 -- Test with:
 --      prettyBoard (deleteSquare (Pos 'G' 7) initialBoard)
 deleteSquare :: Pos -> Board -> Board
@@ -144,7 +151,11 @@ moves Bishop = [(1, 1), (1, -1), (-1, 1), (-1, -1)] -- Diagonals
 moves Rook = [(0, 1), (1, 0), (-1, 0), (0, -1)] -- Horizontals + verticals
 moves King = [(1, 1), (1, 0), (0, 1), (-1, -1), (-1, 0), (-1, 1), (0, -1), (1, -1)]
 
-
-
-main :: IO ()
-main = prettyBoard initialBoard
+-- Test with:
+--      colorPos White initialBoard
+colorPos :: PieceColor -> Board -> [Pos]
+colorPos pieceColor (Board squares) = map snd $ filter (\(color, pos) -> color == pieceColor) [(getColorFromMaybePiece mbp, pos) | Square pos mbp <- squares]
+    where
+        getColorFromMaybePiece :: Maybe Piece -> PieceColor
+        getColorFromMaybePiece Nothing = error "No piece provided"
+        getColorFromMaybePiece (Just (Piece pc pt)) = pc
