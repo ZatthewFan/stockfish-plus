@@ -110,15 +110,18 @@ valuePiece (Piece Black pType) =
 
 -- TASK 2 --
 
-movePos :: Pos -> Pos -> Board -> Board
-movePos fromPos toPos board = deleteSquare toPos (updateBoard fromPos toPos board)
 -- Test with:
---      prettyBoard (deleteSquare (Pos 'G' 7) initialBoard)
+--      putStrLn $ prettyBoard (movePos (Pos 'A' 1) (Pos 'A' 8) initialBoard)
+movePos :: Pos -> Pos -> Board -> Board
+movePos fromPos toPos board = deleteSquare fromPos (updateBoard fromPos toPos board)
+
+-- Test with:
+--      putStrLn $ prettyBoard (deleteSquare (Pos 'G' 7) initialBoard)
 deleteSquare :: Pos -> Board -> Board
 deleteSquare pos (Board board) = Board (filter (\(Square squarePos _) -> squarePos /= pos) board)
 
 -- Test with:
---      prettyBoard (updateBoard (Pos 'A' 1) (Pos 'A' 8) initialBoard)
+--      putStrLn $ prettyBoard (updateBoard (Pos 'A' 1) (Pos 'E' 8) initialBoard)
 updateBoard :: Pos -> Pos -> Board -> Board
 -- updateBoard fromPos toPos (Board board) = Board (map (updateSquare toPos fromPos (Board board)) board)
 updateBoard fromPos toPos (Board board) = Board (map updateFunc board)
@@ -173,7 +176,7 @@ pieceType :: Piece -> PieceType
 pieceType (Piece _ pt) = pt
 
 -- Test with:
---      prettyBoards (generatePawnMoves (Piece White Pawn) (Pos 'A' 2) initialBoard)
+--      putStrLn $ prettyBoard (generatePawnMoves (Piece White Pawn) (Pos 'A' 2) initialBoard)
 generatePawnMoves :: Piece -> Pos -> Board -> [Board]
 generatePawnMoves (Piece color _) (Pos file rank) board =
   let moveForward = if color == White then 1 else -1
