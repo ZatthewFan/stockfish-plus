@@ -5,7 +5,7 @@ import Data.List (intersperse)
 -- Data types
 data Piece = Piece PieceColor PieceType deriving (Show, Eq)
 data PieceColor = White | Black deriving (Show, Eq)
-data PieceType = Pawn | Bishop | Knight | Rook | Queen | King deriving (Show, Eq)
+data PieceType = Dummy | Pawn | Bishop | Knight | Rook | Queen | King deriving (Show, Eq)
 
 data Square = Square Pos (Maybe Piece) deriving (Show, Eq)
 data Board = Board [Square] deriving (Show, Eq)
@@ -50,7 +50,7 @@ initialBoard = Board [
     ]
 
 prettySquare :: Maybe Piece -> Char
-prettySquare Nothing = '*'
+prettySquare (Just (Piece _ Dummy)) = '*'
 prettySquare (Just (Piece White Pawn)) = '♟'
 prettySquare (Just (Piece Black Pawn)) = '♙'
 prettySquare (Just (Piece White Rook)) = '♜'
