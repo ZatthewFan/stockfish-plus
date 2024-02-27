@@ -28,7 +28,8 @@ playerTurn board color = do
 
 playGame :: IO ()
 playGame = do
-    let initialState = (State initialBoard)
+    let initialState = State initialBoard White -- Assuming White starts the game
+
     playLoop initialState
     where
         playLoop :: State -> IO ()
@@ -36,9 +37,13 @@ playGame = do
             if isGameOver state
                 then putStrLn "Game over."
                 else do
-                    let currentPlayerColor = if length (colorPos White (gameState state)) > length (colorPos Black (gameState state)) then Black else White
-                    newState <- playerTurn (gameState state) currentPlayerColor
-                    playLoop (State newState)
+                    prettyBoard (gameState state) -- Assuming a function to print the board
+                    putStrLn $ show (currentPlayer state) ++ "'s turn."
+                    -- Get move from player and make the move
+                    newState <- playerTurn (gameState state) (currentPlayer state)
+                    let nextPlayer = if currentPlayer state == White then Black else White
+                    playLoop $ State newState nextPlayer
+
 
 main :: IO ()
 main = do

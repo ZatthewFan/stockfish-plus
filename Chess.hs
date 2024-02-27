@@ -13,7 +13,11 @@ data PieceType = Dummy | Pawn | Bishop | Knight | Rook | Queen | King deriving (
 data Square = Square Pos (Maybe Piece) deriving (Show, Eq)
 data Board = Board [Square] deriving (Show, Eq)
 data Pos = Pos Char Int deriving (Show, Eq)
-data State = State { gameState :: Board } deriving (Show, Eq)
+data State = State {
+  gameState :: Board,
+  currentPlayer :: PieceColor
+}
+
 
 
 initialBoard :: Board
@@ -238,20 +242,49 @@ colorPos pieceColor (Board squares) = map snd $ filter (\(color, pos) -> color =
         getColorFromMaybePiece (Just (Piece pc pt)) = pc
 
 -- Test with:
---      nextStates (State initialBoard)
+--      nextStates (State initialBoard) TODO UPDATE
+-- nextStates :: State -> [State]
+-- nextStates (State gamestate) = map State (concatMap (genMoves gamestate) allPos)
+--     where
+--         allPos = colorPos White gamestate ++ colorPos Black gamestate
+
 nextStates :: State -> [State]
-nextStates (State gamestate) = map State (concatMap (genMoves gamestate) allPos)
+nextStates (State gamestate currentPlayer) =
+    concatMap generateStatesForPiece $ colorPos currentPlayer gamestate
     where
-        allPos = colorPos White gamestate ++ colorPos Black gamestate
+        nextPlayer :: PieceColor -> PieceColor
+        nextPlayer White = Black
+        nextPlayer Black = White
+
+        generateStatesForPiece :: Pos -> [State]
+        generateStatesForPiece pos = map (\newBoard -> State newBoard (nextPlayer currentPlayer)) (genMoves gamestate pos)
+
+
+
 
 -- Test with:
 --      isGameOver (State initialBoard)
 --      isGameOver (State (movePos (Pos 'A' 1) (Pos 'E' 8) initialBoard))
+-- isGameOver :: State -> Bool
+-- isGameOver (State board) = not $ (isBlackKingAlive board) && (isWhiteKingAlive board)
+--     where
+--         isBlackKingAlive :: Board -> Bool
+--         isBlackKingAlive (Board squares) = not $ [] == (filter (\(Square _ mbp) -> mbp == (Just (Piece Black King))) squares)
+
+--         isWhiteKingAlive :: Board -> Bool
+--         isWhiteKingAlive (Board squares) = not $ [] == (filter (\(Square _ mbp) -> mbp == (Just (Piece White King))) squares)
+
 isGameOver :: State -> Bool
-isGameOver (State board) = not $ (isBlackKingAlive board) && (isWhiteKingAlive board)
+isGameOver (State board _) = not $ isBlackKingAlive board && isWhiteKingAlive board
     where
         isBlackKingAlive :: Board -> Bool
-        isBlackKingAlive (Board squares) = not $ [] == (filter (\(Square _ mbp) -> mbp == (Just (Piece Black King))) squares)
+        isBlackKingAlive board = any (\square -> squareContains (Piece Black King) square) (allSquares board)
 
         isWhiteKingAlive :: Board -> Bool
-        isWhiteKingAlive (Board squares) = not $ [] == (filter (\(Square _ mbp) -> mbp == (Just (Piece White King))) squares)
+        isWhiteKingAlive board = any (\square -> squareContains (Piece White King) square) (allSquares board)
+
+        squareContains :: Piece -> Square -> Bool
+        squareContains piece (Square _ mbPiece) = mbPiece == Just piece
+
+        allSquares :: Board -> [Square]
+        allSquares (Board squares) = squares
