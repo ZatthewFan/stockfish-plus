@@ -14,40 +14,44 @@ data State = State { gameState :: Board } deriving (Show, Eq)
 
 
 initialBoard :: Board
-initialBoard = Board [
-    Square (Pos 'A' 1) (Just (Piece White Rook)),
-    Square (Pos 'B' 1) (Just (Piece White Knight)),
-    Square (Pos 'C' 1) (Just (Piece White Bishop)),
-    Square (Pos 'D' 1) (Just (Piece White Queen)),
-    Square (Pos 'E' 1) (Just (Piece White King)),
-    Square (Pos 'F' 1) (Just (Piece White Bishop)),
-    Square (Pos 'G' 1) (Just (Piece White Knight)),
-    Square (Pos 'H' 1) (Just (Piece White Rook)),
-    Square (Pos 'A' 2) (Just (Piece White Pawn)),
-    Square (Pos 'B' 2) (Just (Piece White Pawn)),
-    Square (Pos 'C' 2) (Just (Piece White Pawn)),
-    Square (Pos 'D' 2) (Just (Piece White Pawn)),
-    Square (Pos 'E' 2) (Just (Piece White Pawn)),
-    Square (Pos 'F' 2) (Just (Piece White Pawn)),
-    Square (Pos 'G' 2) (Just (Piece White Pawn)),
-    Square (Pos 'H' 2) (Just (Piece White Pawn)),
-    Square (Pos 'A' 7) (Just (Piece Black Pawn)),
-    Square (Pos 'B' 7) (Just (Piece Black Pawn)),
-    Square (Pos 'C' 7) (Just (Piece Black Pawn)),
-    Square (Pos 'D' 7) (Just (Piece Black Pawn)),
-    Square (Pos 'E' 7) (Just (Piece Black Pawn)),
-    Square (Pos 'F' 7) (Just (Piece Black Pawn)),
-    Square (Pos 'G' 7) (Just (Piece Black Pawn)),
-    Square (Pos 'H' 7) (Just (Piece Black Pawn)),
-    Square (Pos 'A' 8) (Just (Piece Black Rook)),
-    Square (Pos 'B' 8) (Just (Piece Black Knight)),
-    Square (Pos 'C' 8) (Just (Piece Black Bishop)),
-    Square (Pos 'D' 8) (Just (Piece Black Queen)),
-    Square (Pos 'E' 8) (Just (Piece Black King)),
-    Square (Pos 'F' 8) (Just (Piece Black Bishop)),
-    Square (Pos 'G' 8) (Just (Piece Black Knight)),
-    Square (Pos 'H' 8) (Just (Piece Black Rook))
-    ]
+initialBoard = Board $ pieceSquares ++ dummySquares
+    where 
+        pieceSquares = [
+            Square (Pos 'A' 1) (Just (Piece White Rook)),
+            Square (Pos 'B' 1) (Just (Piece White Knight)),
+            Square (Pos 'C' 1) (Just (Piece White Bishop)),
+            Square (Pos 'D' 1) (Just (Piece White Queen)),
+            Square (Pos 'E' 1) (Just (Piece White King)),
+            Square (Pos 'F' 1) (Just (Piece White Bishop)),
+            Square (Pos 'G' 1) (Just (Piece White Knight)),
+            Square (Pos 'H' 1) (Just (Piece White Rook)),
+            Square (Pos 'A' 2) (Just (Piece White Pawn)),
+            Square (Pos 'B' 2) (Just (Piece White Pawn)),
+            Square (Pos 'C' 2) (Just (Piece White Pawn)),
+            Square (Pos 'D' 2) (Just (Piece White Pawn)),
+            Square (Pos 'E' 2) (Just (Piece White Pawn)),
+            Square (Pos 'F' 2) (Just (Piece White Pawn)),
+            Square (Pos 'G' 2) (Just (Piece White Pawn)),
+            Square (Pos 'H' 2) (Just (Piece White Pawn)),
+            Square (Pos 'A' 7) (Just (Piece Black Pawn)),
+            Square (Pos 'B' 7) (Just (Piece Black Pawn)),
+            Square (Pos 'C' 7) (Just (Piece Black Pawn)),
+            Square (Pos 'D' 7) (Just (Piece Black Pawn)),
+            Square (Pos 'E' 7) (Just (Piece Black Pawn)),
+            Square (Pos 'F' 7) (Just (Piece Black Pawn)),
+            Square (Pos 'G' 7) (Just (Piece Black Pawn)),
+            Square (Pos 'H' 7) (Just (Piece Black Pawn)),
+            Square (Pos 'A' 8) (Just (Piece Black Rook)),
+            Square (Pos 'B' 8) (Just (Piece Black Knight)),
+            Square (Pos 'C' 8) (Just (Piece Black Bishop)),
+            Square (Pos 'D' 8) (Just (Piece Black Queen)),
+            Square (Pos 'E' 8) (Just (Piece Black King)),
+            Square (Pos 'F' 8) (Just (Piece Black Bishop)),
+            Square (Pos 'G' 8) (Just (Piece Black Knight)),
+            Square (Pos 'H' 8) (Just (Piece Black Rook))
+            ]
+        dummySquares = [Square (Pos file rank) (Just (Piece White Dummy)) | file <- ['A'..'H'], rank <- [1..8]]
+
 
 prettySquare :: Maybe Piece -> Char
 prettySquare (Just (Piece _ Dummy)) = '*'
@@ -65,7 +69,7 @@ prettySquare (Just (Piece White King)) = '♚'
 prettySquare (Just (Piece Black King)) = '♔'
 
 -- Test with:
---      putStrLn $ prettyBoard initialBoard
+--      prettyBoard initialBoard
 prettyBoard :: Board -> IO()
 prettyBoard (Board squares) =
     putStrLn $ unlines [intersperse ' ' [prettySquare (flatten (lookup (Pos file rank) pieceList)) | file <- ['A'..'H']] | rank <- [8,7..1]]
@@ -92,26 +96,28 @@ evalBoard (Board board) = sum $ map valueSquare board
 valuePiece :: Piece -> Int
 valuePiece (Piece White pieceType) =
     case pieceType of
-    Pawn -> 1
-    Knight -> 3
-    Bishop -> 3
-    Rook -> 5
-    Queen -> 9
-    King -> 1000
+        Dummy -> 0
+        Pawn -> 1
+        Knight -> 3
+        Bishop -> 3
+        Rook -> 5
+        Queen -> 9
+        King -> 1000
 valuePiece (Piece Black pType) =
     case pType of
-    Pawn -> -1
-    Knight -> -3
-    Bishop -> -3
-    Rook -> -5
-    Queen -> -9
-    King -> -1000
+        Dummy -> 0
+        Pawn -> -1
+        Knight -> -3
+        Bishop -> -3
+        Rook -> -5
+        Queen -> -9
+        King -> -1000
 
 -- TASK 2 --
 
 -- Test with:
---      putStrLn $ prettyBoard (movePos (Pos 'A' 1) (Pos 'A' 8) initialBoard)
---      putStrLn $ prettyBoard (movePos (Pos 'A' 1) (Pos 'B' 4) initialBoard)
+--      prettyBoard (movePos (Pos 'A' 1) (Pos 'A' 8) initialBoard)
+--      prettyBoard (movePos (Pos 'A' 1) (Pos 'B' 4) initialBoard)
 movePos :: Pos -> Pos -> Board -> Board
 movePos fromPos toPos board = deleteSquare fromPos (updateBoard fromPos toPos board)
 
@@ -121,8 +127,8 @@ deleteSquare :: Pos -> Board -> Board
 deleteSquare pos (Board board) = Board (filter (\(Square squarePos _) -> squarePos /= pos) board)
 
 -- Test with:
---      putStrLn $ prettyBoard (updateBoard (Pos 'A' 1) (Pos 'E' 8) initialBoard)
---      putStrLn $ prettyBoard (updateBoard (Pos 'A' 1) (Pos 'E' 5) initialBoard)
+--      prettyBoard (updateBoard (Pos 'A' 1) (Pos 'E' 8) initialBoard)
+--      prettyBoard (updateBoard (Pos 'A' 1) (Pos 'E' 5) initialBoard)
 updateBoard :: Pos -> Pos -> Board -> Board
 updateBoard fromPos toPos (Board board) = Board (map updateSquare board)
     where
@@ -141,11 +147,12 @@ getPiece pos (Board board) =
 --      moves Bishop
 --      moves Rook
 moves :: PieceType -> [(Int, Int)]
+moves Dummy =   []
 moves Pawn =    [] -- Pawn vectors depend on piece colour
-moves Knight = [(-2, -1), (-2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2), (2, -1), (2, 1)]
-moves Bishop = [(1, 1), (1, -1), (-1, 1), (-1, -1)] -- Diagonals
-moves Rook = [(0, 1), (1, 0), (-1, 0), (0, -1)] -- Horizontals + verticals
-moves King = [(1, 1), (1, 0), (0, 1), (-1, -1), (-1, 0), (-1, 1), (0, -1), (1, -1)]
+moves Knight =  [(-2, -1), (-2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2), (2, -1), (2, 1)]
+moves Bishop =  [(1, 1), (1, -1), (-1, 1), (-1, -1)] -- Diagonals
+moves Rook =    [(0, 1), (1, 0), (-1, 0), (0, -1)] -- Horizontals + verticals
+moves King =    [(1, 1), (1, 0), (0, 1), (-1, -1), (-1, 0), (-1, 1), (0, -1), (1, -1)]
 
 genMoves :: Board -> Pos -> [Board]
 genMoves board pos = case getPiece pos board of
@@ -193,7 +200,11 @@ withinBoard (Pos file rank) = file >= 'A' && file <= 'H' && rank >= 1 && rank <=
 --      isPosEmpty (Pos 'E' 4) initialBoard
 --      isPosEmpty (Pos 'F' 8) initialBoard
 isPosEmpty :: Pos -> Board -> Bool
-isPosEmpty p board = isNothing (getPiece p board)
+isPosEmpty pos board = case getPiece pos board of
+    Just (Piece _ Dummy) -> True
+    Nothing -> True  -- Should not reach here, but just in case
+    _ -> False
+
 
 -- Test with:
 --      isValidCapture (Pos 'E' 7) initialBoard White
