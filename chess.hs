@@ -54,6 +54,7 @@ initialBoard = Board $ pieceSquares ++ dummySquares
 
 
 prettySquare :: Maybe Piece -> Char
+prettySquare Nothing = '~'
 prettySquare (Just (Piece _ Dummy)) = '*'
 prettySquare (Just (Piece White Pawn)) = '♟'
 prettySquare (Just (Piece Black Pawn)) = '♙'
@@ -124,7 +125,12 @@ movePos fromPos toPos board = deleteSquare fromPos (updateBoard fromPos toPos bo
 -- Test with:
 --      prettyBoard (deleteSquare (Pos 'G' 7) initialBoard)
 deleteSquare :: Pos -> Board -> Board
-deleteSquare pos (Board board) = Board (filter (\(Square squarePos _) -> squarePos /= pos) board)
+deleteSquare pos (Board squares) = Board (map replaceIfMatch squares)
+    where
+        replaceIfMatch square@(Square squarePos _) = 
+            if squarePos == pos 
+            then Square squarePos (Just (Piece White Dummy)) -- Replace with a Dummy piece
+            else square
 
 -- Test with:
 --      prettyBoard (updateBoard (Pos 'A' 1) (Pos 'E' 8) initialBoard)
