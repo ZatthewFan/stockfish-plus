@@ -7,7 +7,7 @@ import Data.List (intersperse)
 
 -- Data types
 data Piece = Piece PieceColor PieceType deriving (Show, Eq)
-data PieceColor = White | Black deriving (Show, Eq)
+data PieceColor = White | Black | Null deriving (Show, Eq)
 data PieceType = Dummy | Pawn | Bishop | Knight | Rook | Queen | King deriving (Show, Eq)
 
 data Square = Square Pos (Maybe Piece) deriving (Show, Eq)
@@ -53,12 +53,12 @@ initialBoard = Board $ pieceSquares ++ dummySquares
             Square (Pos 'G' 8) (Just (Piece Black Knight)),
             Square (Pos 'H' 8) (Just (Piece Black Rook))
             ]
-        dummySquares = [Square (Pos file rank) (Just (Piece White Dummy)) | file <- ['A'..'H'], rank <- [1..8]]
+        dummySquares = [Square (Pos file rank) (Just (Piece Null Dummy)) | file <- ['A'..'H'], rank <- [1..8]]
 
 
 prettySquare :: Maybe Piece -> Char
 prettySquare Nothing = '~'
-prettySquare (Just (Piece _ Dummy)) = '*'
+prettySquare (Just (Piece Null Dummy)) = '*'
 prettySquare (Just (Piece White Pawn)) = '♟'
 prettySquare (Just (Piece Black Pawn)) = '♙'
 prettySquare (Just (Piece White Rook)) = '♜'
@@ -132,7 +132,7 @@ deleteSquare pos (Board squares) = Board (map replaceIfMatch squares)
     where
         replaceIfMatch square@(Square squarePos _) = 
             if squarePos == pos 
-            then Square squarePos (Just (Piece White Dummy)) -- Replace with a Dummy piece
+            then Square squarePos (Just (Piece Null Dummy)) -- Replace with a Dummy piece
             else square
 
 -- Test with:
@@ -244,3 +244,14 @@ nextStates (State gamestate) = map State (concatMap (genMoves gamestate) allPos)
     where
         allPos = colorPos White gamestate ++ colorPos Black gamestate
 
+-- Test with:
+--      isGameOver (State initialBoard)
+--      isGameOver (State (movePos (Pos 'A' 1) (Pos 'E' 8) initialBoard))
+isGameOver :: State -> Bool
+isGameOver (State board) = not $ (isBlackKingAlive board) && (isWhiteKingAlive board)
+    where
+        isBlackKingAlive :: Board -> Bool
+        isBlackKingAlive (Board squares) = not $ [] == (filter (\(Square _ mbp) -> mbp == (Just (Piece Black King))) squares)
+
+        isWhiteKingAlive :: Board -> Bool
+        isWhiteKingAlive (Board squares) = not $ [] == (filter (\(Square _ mbp) -> mbp == (Just (Piece White King))) squares)

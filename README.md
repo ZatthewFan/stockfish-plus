@@ -4,7 +4,8 @@ A chess game written in vanilla Haskell where the engine is a real player.
 
 ## How to run
 ```
-ghci Chess
+ghci Main
+main
 ```
 
 wiki page: https://wiki.ubc.ca/Course:CPSC312-2024/Chess
