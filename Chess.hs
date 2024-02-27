@@ -1,3 +1,6 @@
+module Chess where
+
+
 -- TASK 1 --
 import Data.Maybe (catMaybes, listToMaybe, isNothing)
 import Data.List (intersperse)
@@ -110,8 +113,8 @@ valuePiece (Piece Black pType) =
 -- TASK 2 --
 
 -- Test with:
---      putStrLn $ prettyBoard (movePos (Pos 'A' 1) (Pos 'A' 8) initialBoard)
---      putStrLn $ prettyBoard (movePos (Pos 'A' 1) (Pos 'B' 4) initialBoard)
+--      prettyBoard (movePos (Pos 'A' 1) (Pos 'A' 8) initialBoard)
+--      prettyBoard (movePos (Pos 'A' 1) (Pos 'B' 4) initialBoard)
 movePos :: Pos -> Pos -> Board -> Board
 movePos fromPos toPos board = deleteSquare fromPos (updateBoard fromPos toPos board)
 
@@ -121,14 +124,15 @@ deleteSquare :: Pos -> Board -> Board
 deleteSquare pos (Board board) = Board (filter (\(Square squarePos _) -> squarePos /= pos) board)
 
 -- Test with:
---      putStrLn $ prettyBoard (updateBoard (Pos 'A' 1) (Pos 'E' 8) initialBoard)
---      putStrLn $ prettyBoard (updateBoard (Pos 'A' 1) (Pos 'E' 5) initialBoard)
+--      prettyBoard (updateBoard (Pos 'A' 1) (Pos 'E' 8) initialBoard)
+--      prettyBoard (updateBoard (Pos 'A' 1) (Pos 'E' 5) initialBoard)
 updateBoard :: Pos -> Pos -> Board -> Board
-updateBoard fromPos toPos (Board board) = Board (map updateSquare board)
+updateBoard fromPos toPos (Board squares) = Board (map updateSquare squares)
     where
         updateSquare (Square pos piece)
-            | pos == toPos =    Square toPos (getPiece fromPos (Board board))
-            | otherwise =       Square pos piece
+            | pos == toPos   = Square toPos (getPiece fromPos (Board squares))
+--            | pos == fromPos = Square fromPos (getPiece toPos (Board squares))
+            | otherwise      = Square pos piece
 
 getPiece :: Pos -> Board -> Maybe Piece
 getPiece pos (Board squares) = 
@@ -217,3 +221,4 @@ nextStates :: State -> [State]
 nextStates (State gamestate) = map State (concatMap (genMoves gamestate) allPos)
     where
         allPos = colorPos White gamestate ++ colorPos Black gamestate
+
