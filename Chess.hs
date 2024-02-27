@@ -7,7 +7,7 @@ import Data.List (intersperse)
 
 -- Data types
 data Piece = Piece PieceColor PieceType deriving (Show, Eq)
-data PieceColor = White | Black | Null deriving (Show, Eq)
+data PieceColor = White | Black deriving (Show, Eq)
 data PieceType = Dummy | Pawn | Bishop | Knight | Rook | Queen | King deriving (Show, Eq)
 
 data Square = Square Pos (Maybe Piece) deriving (Show, Eq)
@@ -16,7 +16,7 @@ data Pos = Pos Char Int deriving (Show, Eq)
 data State = State {
   gameState :: Board,
   currentPlayer :: PieceColor
-}
+} deriving (Show, Eq)
 
 
 
@@ -57,12 +57,12 @@ initialBoard = Board $ pieceSquares ++ dummySquares
             Square (Pos 'G' 8) (Just (Piece Black Knight)),
             Square (Pos 'H' 8) (Just (Piece Black Rook))
             ]
-        dummySquares = [Square (Pos file rank) (Just (Piece Null Dummy)) | file <- ['A'..'H'], rank <- [1..8]]
+        dummySquares = [Square (Pos file rank) (Just (Piece White Dummy)) | file <- ['A'..'H'], rank <- [1..8]]
 
 
 prettySquare :: Maybe Piece -> Char
 prettySquare Nothing = '~'
-prettySquare (Just (Piece Null Dummy)) = '*'
+prettySquare (Just (Piece _ Dummy)) = '*'
 prettySquare (Just (Piece White Pawn)) = '♟'
 prettySquare (Just (Piece Black Pawn)) = '♙'
 prettySquare (Just (Piece White Rook)) = '♜'
@@ -136,7 +136,7 @@ deleteSquare pos (Board squares) = Board (map replaceIfMatch squares)
     where
         replaceIfMatch square@(Square squarePos _) = 
             if squarePos == pos 
-            then Square squarePos (Just (Piece Null Dummy)) -- Replace with a Dummy piece
+            then Square squarePos (Just (Piece White Dummy)) -- Replace with a Dummy piece
             else square
 
 -- Test with:
@@ -172,17 +172,17 @@ genMoves :: Board -> Pos -> [Board]
 genMoves board pos = case getPiece pos board of
     Nothing -> []
     Just piece -> case pieceType piece of
-        Pawn -> generatePawnMoves piece pos board
-        _    -> concatMap (generatePieceMoves piece pos board) (moves (pieceType piece))
+        Pawn -> genPawnMoves piece pos board
+        _    -> concatMap (genPieceMoves piece pos board) (moves (pieceType piece))
 
 -- genMoves helper functions
 pieceType :: Piece -> PieceType
 pieceType (Piece _ piece) = piece
 
 -- Test with:
---      prettyBoards (generatePawnMoves (Piece White Pawn) (Pos 'A' 2) initialBoard)
-generatePawnMoves :: Piece -> Pos -> Board -> [Board]
-generatePawnMoves (Piece color _) (Pos file rank) board =
+--      prettyBoards (genPawnMoves (Piece White Pawn) (Pos 'A' 2) initialBoard)
+genPawnMoves :: Piece -> Pos -> Board -> [Board]
+genPawnMoves (Piece color _) (Pos file rank) board =
     let stepDirection =   if color == White then 1 else -1
         startPos =        if color == White && rank == 2 || color == Black && rank == 7 then [1, 2] else [1]
         forwardMoves =    [movePos (Pos file rank) (Pos file (rank + n * stepDirection)) board | n <- startPos, isPosEmpty (Pos file (rank + n * stepDirection)) board]
@@ -191,10 +191,10 @@ generatePawnMoves (Piece color _) (Pos file rank) board =
     in forwardMoves ++ captureMoves
 
 -- Test with:
---      prettyBoards (generatePawnMoves (Piece White Knight) (Pos 'B' 1) initialBoard)
---      prettyBoards (generatePawnMoves (Piece White Pawn) (Pos 'A' 2) initialBoard)
-generatePieceMoves :: Piece -> Pos -> Board -> (Int, Int) -> [Board]
-generatePieceMoves piece pos board (file, rank) =
+--      prettyBoards (genPawnMoves (Piece White Knight) (Pos 'B' 1) initialBoard)
+--      prettyBoards (genPawnMoves (Piece White Pawn) (Pos 'A' 2) initialBoard)
+genPieceMoves :: Piece -> Pos -> Board -> (Int, Int) -> [Board]
+genPieceMoves piece pos board (file, rank) =
     let Pos deltaf deltar = pos
         newPos = Pos (toEnum $ fromEnum deltaf + file) (deltar + rank)
         Piece color _ = piece
@@ -241,38 +241,18 @@ colorPos pieceColor (Board squares) = map snd $ filter (\(color, pos) -> color =
         getColorFromMaybePiece Nothing = error "No piece provided"
         getColorFromMaybePiece (Just (Piece pc pt)) = pc
 
--- Test with:
---      nextStates (State initialBoard) TODO UPDATE
--- nextStates :: State -> [State]
--- nextStates (State gamestate) = map State (concatMap (genMoves gamestate) allPos)
---     where
---         allPos = colorPos White gamestate ++ colorPos Black gamestate
-
+-- !Test with:
+--      nextStates (State initialBoard White)
 nextStates :: State -> [State]
 nextStates (State gamestate currentPlayer) =
-    concatMap generateStatesForPiece $ colorPos currentPlayer gamestate
+    concatMap genStatesForPiece $ colorPos currentPlayer gamestate
     where
-        nextPlayer :: PieceColor -> PieceColor
-        nextPlayer White = Black
-        nextPlayer Black = White
+        toggleTurns :: PieceColor -> PieceColor
+        toggleTurns White = Black
+        toggleTurns Black = White
 
-        generateStatesForPiece :: Pos -> [State]
-        generateStatesForPiece pos = map (\newBoard -> State newBoard (nextPlayer currentPlayer)) (genMoves gamestate pos)
-
-
-
-
--- Test with:
---      isGameOver (State initialBoard)
---      isGameOver (State (movePos (Pos 'A' 1) (Pos 'E' 8) initialBoard))
--- isGameOver :: State -> Bool
--- isGameOver (State board) = not $ (isBlackKingAlive board) && (isWhiteKingAlive board)
---     where
---         isBlackKingAlive :: Board -> Bool
---         isBlackKingAlive (Board squares) = not $ [] == (filter (\(Square _ mbp) -> mbp == (Just (Piece Black King))) squares)
-
---         isWhiteKingAlive :: Board -> Bool
---         isWhiteKingAlive (Board squares) = not $ [] == (filter (\(Square _ mbp) -> mbp == (Just (Piece White King))) squares)
+        genStatesForPiece :: Pos -> [State]
+        genStatesForPiece pos = map (\newBoard -> State newBoard (toggleTurns currentPlayer)) (genMoves gamestate pos)
 
 isGameOver :: State -> Bool
 isGameOver (State board _) = not $ isBlackKingAlive board && isWhiteKingAlive board
