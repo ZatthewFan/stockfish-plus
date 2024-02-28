@@ -5,26 +5,29 @@ import Chess
 parsePos :: String -> Pos
 parsePos (x:xs) = Pos x (read xs)
 
+validPos :: Pos -> Bool
+validPos (Pos file rank) = file `elem` ['A'..'H'] && rank `elem` [1..8]
+
 playerTurn :: Board -> PieceColor -> IO Board
 playerTurn board color = do
-    -- Print board
-    prettyBoard board
-    putStrLn $ show color ++ "'s turn."
-    
     -- Prompt for player input
-    putStrLn "Enter your move in the format 'fromPos toPos' (example: 'A2 A3')."
+    putStrLn "Enter your move in the format 'fromPos toPos' (example: 'A2 A3'). \nEnter Ctrl-c to exit game"
     input <- getLine
-    let [from, to] = words input
-    let fromPos = parsePos from
-    let toPos   = parsePos to
-
-    -- Check move validity??
-    -- 
-    --
-    
-
-    return $ movePos fromPos toPos board
-
+    if length (words input) /= 2
+        then do
+            putStrLn "Invalid move format. Try again using the format provided by the example"
+            playerTurn board color
+    else do
+        let [from, to] = words input
+        let fromPos = parsePos from
+        let toPos   = parsePos to
+        
+        -- check move validity
+        if not $ validPos fromPos && validPos toPos
+            then do
+                putStrLn "Invalid move. Try again"
+                playerTurn board color
+            else return $ movePos fromPos toPos board
 
 playGame :: IO ()
 playGame = do
